@@ -2,16 +2,39 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 import 'package:todo_app/model/todo.dart';
 import 'package:todo_app/network_utils/todo_utils.dart';
+import 'package:todo_app/repo/contract_provider_todo.dart';
+
+import '../constants.dart';
+import '../model/api_response.dart';
 
 class TodoScreen extends StatefulWidget {
+  TodoScreen(this.api_todo);
+  TodoProviderContract api_todo;
+
   @override
   _TodoScreenState createState() => _TodoScreenState();
 }
 
 class _TodoScreenState extends State<TodoScreen> {
   TextEditingController _taskController = TextEditingController();
+
+  Future<void> initParse() async {
+    await Parse().initialize(
+      kParseApplicationId,
+      keyParseServerUrl,
+      clientKey: keyParseClientKey,
+      debug: true,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initParse();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +79,9 @@ class _TodoScreenState extends State<TodoScreen> {
               );
             }
           },
-          future: getTodoList(),
+          future: getTodoListParse(),
+
+          //future: getTodoList(),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -98,6 +123,13 @@ class _TodoScreenState extends State<TodoScreen> {
                     child: Text("Cancel")),
               ],
             ));
+  }
+
+  Future<List<Todo>> getTodoListParse() async {
+    List<Todo> todoList = [];
+    ApiResponse res = await widget.api_todo.getAll();
+    print(res);
+    return todoList;
   }
 
   Future<List<Todo>> getTodoList() async {
